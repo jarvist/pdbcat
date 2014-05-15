@@ -1,0 +1,113 @@
+
+			PDBCAT
+
+Intro:
+
+  The Brookhaven Protein Data Bank stores atomic coordinate information
+for protein structures in a column based format.  This is designed to
+be read easily read by FORTRAN programs.  Indeed, if you get the
+format description (from anonymous ftp to ftp.pdb.bnl.gov, the file
+/pub/format.desc.ps) they show the single input line needed to read
+each record type.
+  However, I am a C/C++ programmer in the Unix environment.  It is a
+easier for me to deal with field based input than column based ones.
+If the fields are white space delimited I can easily use awk and perl
+to manipulate the coordinate information.  So I needed some way to
+convert the ATOM and HETATM records of PDB files from the standard
+column based format to a field based one and back again.  It needed
+to denote missing fields if they exist.
+  That converter is `pdbcat'.
+
+Usage:
+
+pdbcat {-fields | -columns} [[-f] files]
+
+  Read any pdb file from stdin or list of files and convert the
+ data to either a column based or field based pdb file.  A '#'
+ represents an empty field.  This is useful for field based 
+ tools like awk.  The default output is 'columns'.
+
+How to Install:
+  1) uncompress and untar the source
+
+% cat pdbcat_1.tar.Z | uncompress | tar -xf -
+
+  2) change to the pdbcat directory and run make
+
+% cd pdbcat; make
+
+  3) If it complains about not finding CC, then you'll
+have to edit the Makefile and set CC equal to your local
+C++ compilier, for instance, for gcc:
+
+CC=gcc
+
+  4) If there is a problem with strcasecmp, uncomment the
+following line in the Makefile:
+
+#DEF = -DNOSTRCASECMP
+
+    update the time stamp on the file Common.C
+
+% touch Common.C
+
+    and run make again
+
+Warning:
+
+ This does not actually parse the PDB format.  Instead, it parses the
+X-PLOR variant.  This variant has a 4 column (instead of 3 column)
+residue name field, and a special "segment name" field from 
+columns 73 to 76.  While X-PLOR ignores the 1 character "chain
+identifier", this program does not.
+
+Examples:
+
+Here are some examples of pdbcat combined with awk.
+
+Find the centroid:
+
+% pdbcat -fields polio.pdb | awk '{num++; x+=$10; y+=$11; z+=$12} 
+     END {print "Centroid is:", x/num, y/num, z/num}'
+Centroid is: 31.0427 37.0688 120.05
+
+
+Move the data by a certain amount
+
+(in this case, -31.0427 -37.0688 -120.05) Special note, the print statement by itself
+prints the whole line. Also note that I can change a field by just as if it was a varable. 
+
+% head -3 polio.pdb
+ATOM      1  HT1 GLY     6       8.960  50.028  85.307  1.00   .00      VP1 
+ATOM      2  HT2 GLY     6       8.912  51.471  86.202  1.00   .00      VP1 
+ATOM      3  N   GLY     6       8.420  50.899  85.486   .50 51.30      VP1 
+
+% pdbcat -fields polio.pdb | awk '{$10 -= 31.0427; $11 -= 37.0688; 
+          $12 -= 120.05; print }' | pdbcat | head -3 
+ATOM      1 HT1  GLY     6     -22.083  12.959 -34.743  1.00  0.00      VP1    
+ATOM      2 HT2  GLY     6     -22.131  14.402 -33.848  1.00  0.00      VP1    
+ATOM      3 N    GLY     6     -22.623  13.830 -34.564  0.50 51.30      VP1    
+
+
+Select all atoms within some distance of a certain position
+
+In my case, I want the atoms withing 5 angstroms of the CA of SPH 
+
+% grep SPH pdb2plv.pdb | grep CA
+HETATM 6870  CA  SPH     0      33.929  52.255 115.739  1.00 51.30      2PLV7137
+% pdbcat -fields pdb2plv.pdb | awk '($10-33.929)*($10-33.929)+($11-52.255)*
+       ($11-52.255)+($12-115.739)*($12-115.739) < 5*5' | pdbcat
+ATOM    839 CE2  TYR 1 112      30.226  50.647 118.178  1.00 26.17      2PLV   
+ATOM   1594 CB   TYR 1 205      32.194  49.384 112.315  1.00 10.74      2PLV   
+ATOM   1597 CD2  TYR 1 205      32.262  51.768 111.409  1.00 11.01      2PLV   
+ATOM   1602 N    SER 1 206      35.177  48.403 113.360  1.00 12.89      2PLV   
+[...]
+
+
+  Written by Andrew Dalke <dalke@ks.uiuc.edu> of the Theoretical
+Biophysics Group, Beckman Institute, University of Illinois.
+None of us are liable for any bugs, errors, or misconceptions.
+You may use this program freely and for free for non-comercial
+use.  You may redistribute and modify the code as long as I am
+given credit for my part of the work.
+
