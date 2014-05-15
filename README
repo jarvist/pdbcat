@@ -1,4 +1,6 @@
+This github repository is a two line patch of the original PDBCAT v1.3 to compile on modern unixes (Mac OS X, Linux). I realised that I had made these edits on 3 separate machines, so thought it was high time I actually shared these minor corrections, if only with myself :)
 
+####
 			PDBCAT
 
 Intro:
