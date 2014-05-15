@@ -17,11 +17,11 @@
 #include <stdlib.h> // for exit
 #include <stdio.h>  // for feof() and other file manip stuff
 #include <string.h> // for strcasecmp
-#include <iostream.h>
+#include <iostream>
 #include "Common.h"
 #include "PDBData.h"
 
-
+using namespace std;
 
 int main(int argc, char *argv[])
 {
